@@ -1,0 +1,131 @@
+---
+title: "Prof. Olga's Class - September 8, 2025"
+output: pdf_document
+date: "2025-09-05"
+---
+
+Dear prof. Olga. How are you? I hope i did a good job in this task. It was challenging, because I've missed the R workshop, but I'll try my best.
+
+1 - How many Korean Dramas are included in this list? Write an R code to respond to this question.
+```{r}
+db_kdrama <- read.csv("kdrama.csv") #Open K-Drama database
+sum(!is.na(db_kdrama$Name)) #Count the arrows in the "Name" colum
+#I also used !is.na ro eliminate NA values
+```
+2 - Use an R code to return a list of variables that are included in this dataset.
+```{r}
+names(db_kdrama) #Return the name of the variables in the database
+```
+3 - Use an R code to identify what the mean value of total number of episodes for all the kdramas in the dataset is.
+```{r}
+mean(db_kdrama$Number.of.Episodes)
+```
+4 - Plot a histogram of the shows rating.
+```{r}
+hist(db_kdrama$Rating, xlim = c(8.3, 9.3), ylim = c(0, 120),
+       xlab = 'Rating', ylab = 'Frequency',
+       main = 'Frequency of K-Drama grading',
+       col = 'red', border = "black")
+# I used hist to produce the histogram, xlim and ylim to define de limit values of the axis
+# xlab and ylab to change labels, main to change the name of the histogram
+# col and border to change colors
+```
+We can personalize the histogram in interesting ways, such as:
+```{r}
+#First, install the jpeg package
+install.packages("jpeg")
+#Run the package
+library(jpeg)
+#Criate the object for an image (I made it for the K-drama "Crash Landing on You" or 
+#"Sarangui Bulsichak")
+pousandonoamor <- readJPEG("chuudoloona.jpg")
+#Then, create an empty plot
+plot(1, type = "n", xlim = c(0, 1), ylim = c(0, 1), axes = FALSE, xlab = "", ylab = "")
+#Add the image to the plot
+rasterImage(pousandonoamor, xleft = 0, ybottom = 0, xright = 1, ytop = 1)
+#Allow plot over image
+par(new = TRUE)
+#Plot the original histogram
+hist(db_kdrama$Rating, xlim = c(8.3, 9.3), ylim = c(0, 120), 
+     xlab = 'Rating', ylab = 'Frequency', main = 'Frequency of K-Drama grading', 
+     col = 'red', border = "black") # Plot your histogram
+```
+
+5 - How many shows have a rating higher than 9 points? Show how you calculated that in R.
+There are different ways to calculate that in R.
+```{r}
+#we can use the following code to return how many show have more than 9
+sum(db_kdrama$Rating > 9) #excludes shows with exactly 9 rating
+sum(db_kdrama$Rating >= 9) #counts shows with 9 and more than 9
+
+# you can also use dplyr to create a database only with the shows rated greater than R
+install.packages("dplyr") #install and load dplyr package
+library(dplyr)
+
+#we can use filter to create de database with shows rated 9 or greater
+kdrama_g9 <- filter(db_kdrama, Rating >= 9)
+dplyr::glimpse(kdrama_g9) #used to see the new database 
+# I don't know why View function is not working, so let's use this code
+
+#Using the new database, we can discover the grade of "Crash Landing on You"
+crash_row <- kdrama_g9 %>% filter(Name == "Crash Landing on You")
+  crash_rating <- crash_row$Rating
+  print(crash_rating)
+```
+It's rated 9, I almost guessed it right!
+
+6 - Rename variable Year.of.release to simply Year without creating a new variable
+```{r}
+newdb_kdrama <- db_kdrama %>% 
+  rename(Year = Year.of.release)
+names(newdb_kdrama)
+```
+7 - How many shows in this dataset were released in 2020-2022? Demonstrate with an R code.
+```{r}
+kdrama_2022 <- db_kdrama %>%
+  filter(Year.of.release >= 2020 & Year.of.release <= 2022)
+  dim(kdrama_2022)
+```
+106 shows were released in the 2020-2022 period!
+
+8 - What type does the variable Duration have? Show with an R code.
+```{r}
+class(db_kdrama$Duration)
+```
+
+9 - Recode variable Duration so that it would be a numerical variable measuring duration in minutes. Plot the histogram of the recoded variable (though one).
+```{r}
+# We will need to install and load "stringr" package
+install.packages("stringr")
+library(stringr)
+# I'll use the function str_extract to remove the "hr." and "min." from observations
+# I'll use is.na to check whether hours or minutes are absent, and change it for zero
+# Extract hours, returns NA if not found
+hours <- as.numeric(str_extract(db_kdrama$Duration, "\\d+(?= hr\\.)"))
+# Turns NAs into 0
+hours[is.na(hours)] <- 0
+# Extract minutes, returns NA if not found
+minutes <- as.numeric(str_extract(db_kdrama$Duration, "\\d+(?= min\\.)"))
+# Turns NAs into 0
+minutes[is.na(minutes)] <- 0
+# Turns everything into minutes
+total_min <- hours * 60 + minutes
+
+#Plot the data into a histogram
+hist(total_min, xlim = c(7, 101), ylim = c(0, 120), 
+     xlab = 'Duration in minutes', ylab = 'Frequency', 
+     main = 'Distribution of K-Drama episodes duration', 
+     col = 'red', border = "black")
+```
+
+10 - Create a new dataset that will include shows with Original.Network being Netflix.
+```{r}
+# I use str_detect to find Netflix in observations that include other networks
+netflix_shows <- db_kdrama %>%
+    filter(str_detect(Original.Network, "Netflix"))
+```
+11 - What is the average rating score for the shows that have Netflix as an Original Network.
+```{r}
+mean(netflix_shows$Rating)
+```
+
